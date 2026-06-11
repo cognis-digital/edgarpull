@@ -1,0 +1,115 @@
+{
+  "_about": "Offline sample bundle for edgarpull demo/tests. Shapes mirror the real SEC company_tickers.json and data.sec.gov submissions API. Values are illustrative, not live market data.",
+  "tickers": {
+    "0": {"cik_str": 320193, "ticker": "AAPL", "title": "Apple Inc."},
+    "1": {"cik_str": 789019, "ticker": "MSFT", "title": "Microsoft Corp"},
+    "2": {"cik_str": 1067983, "ticker": "BRK-B", "title": "Berkshire Hathaway Inc"}
+  },
+  "submissions": {
+    "0000320193": {
+      "cik": "320193",
+      "name": "Apple Inc.",
+      "tickers": ["AAPL"],
+      "sicDescription": "Electronic Computers",
+      "filings": {
+        "recent": {
+          "accessionNumber": [
+            "0000320193-26-000045",
+            "0001127602-26-009912",
+            "0001127602-26-009880",
+            "0000320193-26-000040",
+            "0000950123-26-004471",
+            "0000950123-26-004470",
+            "0001127602-26-009701",
+            "0000320193-26-000033"
+          ],
+          "filingDate": [
+            "2026-05-02",
+            "2026-05-01",
+            "2026-04-29",
+            "2026-04-28",
+            "2026-04-15",
+            "2026-04-15",
+            "2026-04-10",
+            "2026-04-01"
+          ],
+          "reportDate": [
+            "2026-03-29",
+            "2026-04-29",
+            "2026-04-27",
+            "2026-04-28",
+            "2026-03-31",
+            "2026-03-31",
+            "2026-04-08",
+            "2026-03-31"
+          ],
+          "form": [
+            "10-Q",
+            "4",
+            "4",
+            "8-K",
+            "13F-HR",
+            "13F-HR",
+            "4/A",
+            "8-K"
+          ],
+          "primaryDocument": [
+            "aapl-20260329.htm",
+            "xslF345X05/wk-form4.xml",
+            "xslF345X05/wk-form4.xml",
+            "aapl-20260428.htm",
+            "0000950123-26-004471-index.htm",
+            "0000950123-26-004470-index.htm",
+            "xslF345X05/wk-form4a.xml",
+            "aapl-20260331.htm"
+          ],
+          "primaryDocDescription": [
+            "10-Q",
+            "FORM 4",
+            "FORM 4",
+            "8-K",
+            "13F-HR",
+            "13F-HR",
+            "FORM 4/A",
+            "8-K"
+          ],
+          "items": [
+            "",
+            "",
+            "",
+            "2.02,9.01",
+            "",
+            "",
+            "",
+            "5.02,8.01"
+          ]
+        }
+      }
+    },
+    "0001067983": {
+      "cik": "1067983",
+      "name": "Berkshire Hathaway Inc",
+      "tickers": ["BRK-B"],
+      "sicDescription": "Fire, Marine & Casualty Insurance",
+      "filings": {
+        "recent": {
+          "accessionNumber": [
+            "0000950123-26-004471",
+            "0001067983-26-000018",
+            "0001067983-26-000012"
+          ],
+          "filingDate": ["2026-05-15", "2026-04-30", "2026-02-14"],
+          "reportDate": ["2026-03-31", "2026-04-30", "2025-12-31"],
+          "form": ["13F-HR", "8-K", "13F-HR"],
+          "primaryDocument": [
+            "0000950123-26-004471-index.htm",
+            "brk-20260430.htm",
+            "0001067983-26-000012-index.htm"
+          ],
+          "primaryDocDescription": ["13F-HR", "8-K", "13F-HR"],
+          "items": ["", "2.02", ""]
+        }
+      }
+    }
+  }
+}
