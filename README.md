@@ -44,6 +44,11 @@ edgarpull institutions AAPL --demo          # offline against the sample bundle
 edgarpull insiders AAPL --demo --format json
 edgarpull events AAPL --demo
 edgarpull filings 320193 --demo --limit 5   # by CIK instead of ticker
+edgarpull filings AAPL --demo --format html --out aapl.html   # styled HTML report
+
+# full-text search across ALL filers (EDGAR efts.sec.gov, 2001→present):
+edgarpull fulltext '"battery storage"' --forms 8-K --limit 10
+edgarpull fulltext "artificial intelligence" --format html --out ai.html
 
 # live (real SEC APIs, no key needed) — supply a contact UA per SEC policy:
 edgarpull institutions AAPL --user-agent "Your Name you@example.com"
@@ -59,9 +64,11 @@ edgarpull mcp                               # expose as an MCP server
 | `insiders <ticker\|cik>`      | Insider buys/sells                                | `4`, `4/A`        |
 | `institutions <ticker\|cik>`  | 13F institutional-holder filings                  | `13F-HR`, `13F-NT`|
 | `events <ticker\|cik>`        | Material events (with 8-K item codes)             | `8-K`, `8-K/A`    |
+| `fulltext <query>`            | Full-text search across **all** filers            | any (`--forms`)   |
 
-Flags: `--format table|json`, `--limit N` (`0` = all), `--out FILE`, `--demo`,
-`--user-agent STR`, `--sleep SECONDS`.
+Flags: `--format table|json|html`, `--limit N` (`0` = all), `--out FILE`,
+`--demo`, `--user-agent STR`, `--sleep SECONDS`. `fulltext` adds `--forms` to
+restrict to comma-separated form types (e.g. `--forms 8-K,10-K`).
 
 ## Built-in demo scenario
 
@@ -73,6 +80,17 @@ whose shapes mirror the real SEC `company_tickers.json` and submissions API.
 
 - **Table** (default) — human-readable terminal summary
 - **JSON** — machine-readable filings (with direct EDGAR archive URLs) for pipelines
+- **HTML** (`--format html`) — a self-contained, styled report with clickable
+  accession links to the EDGAR archive; all dynamic text is HTML-escaped
+
+## Full-text search
+
+`edgarpull fulltext <query>` queries the EDGAR full-text search API
+(`efts.sec.gov`), which indexes filing **content** across every filer from 2001
+to the present — complementing the per-issuer submissions feed. Quote a phrase
+for an exact match and use `--forms` to narrow by form type. It sends the same
+descriptive `User-Agent` and fails gracefully when offline (use `--demo` for the
+bundled fixture).
 
 ## MCP server
 

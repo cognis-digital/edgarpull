@@ -23,6 +23,7 @@ import os
 import re
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
@@ -38,6 +39,9 @@ SEC_RATE_LIMIT_SLEEP = 0.2  # seconds between live requests (<= ~5 req/s)
 
 TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik10}.json"
+# EDGAR full-text search (free, no key). Covers filings from 2001 onward.
+# The efts endpoint returns up to 100 hits/page; we slice client-side by limit.
+FULLTEXT_BASE = "https://efts.sec.gov/LATEST/search-index"
 
 # Form-type groupings used by the subcommands.
 INSIDER_FORMS = ("4", "4/A")
@@ -197,6 +201,23 @@ class Fetcher:
             return bucket[cik10]
         return self._http_json(SUBMISSIONS_URL.format(cik10=cik10))
 
+    def fulltext(self, query: str, forms: str = "") -> Any:
+        if self.mode == "demo":
+            bucket = self.cache.get("fulltext", {})
+            # Look up by exact query first, then a "*" catch-all, then any entry.
+            if query in bucket:
+                return bucket[query]
+            if "*" in bucket:
+                return bucket["*"]
+            if bucket:
+                return next(iter(bucket.values()))
+            raise EdgarError("demo cache has no 'fulltext' entry")
+        params = {"q": query}
+        if forms:
+            params["forms"] = forms
+        url = FULLTEXT_BASE + "?" + urllib.parse.urlencode(params)
+        return self._http_json(url)
+
 
 # --------------------------------------------------------------------------- #
 # Lookups and parsing.
@@ -305,6 +326,141 @@ def _at(seq: List[Any], i: int) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# Full-text search (efts.sec.gov) parsing.
+# --------------------------------------------------------------------------- #
+_CIK_RE = re.compile(r"CIK\s*(\d{1,10})", re.IGNORECASE)
+
+
+@dataclass
+class FullTextHit:
+    """A single hit from EDGAR full-text search."""
+
+    accession: str
+    form: str
+    file_date: str
+    display_name: str
+    cik: str = ""
+    document: str = ""
+
+    @property
+    def url(self) -> str:
+        acc_nodash = self.accession.replace("-", "")
+        if not acc_nodash:
+            return "https://efts.sec.gov/LATEST/search-index"
+        try:
+            cik_int = str(int(self.cik)) if self.cik else ""
+        except ValueError:
+            cik_int = ""
+        base = "https://www.sec.gov/Archives/edgar/data"
+        if cik_int:
+            tail = self.document or ""
+            return f"{base}/{cik_int}/{acc_nodash}/{tail}"
+        # No CIK: link to the filing-index search as a graceful fallback.
+        return f"{base}/{acc_nodash}/"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "accession": self.accession,
+            "form": self.form,
+            "file_date": self.file_date,
+            "display_name": self.display_name,
+            "cik": self.cik,
+            "url": self.url,
+        }
+
+
+@dataclass
+class FullTextResult:
+    query: str
+    forms: str = ""
+    hits: List[FullTextHit] = field(default_factory=list)
+    total: int = 0
+    total_is_estimate: bool = False
+    source: str = "live"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "tool": TOOL_NAME,
+            "version": TOOL_VERSION,
+            "kind": "fulltext",
+            "source": self.source,
+            "query": self.query,
+            "forms": self.forms,
+            "total": self.total,
+            "total_is_estimate": self.total_is_estimate,
+            "count": len(self.hits),
+            "hits": [h.to_dict() for h in self.hits],
+        }
+
+
+def parse_fulltext_hits(payload: Any, limit: int = 20) -> List[FullTextHit]:
+    """Parse an efts.sec.gov full-text-search JSON payload into FullTextHit list.
+
+    Defensive about missing keys and alternate field names (``ciks``/``adsh``
+    are preferred over parsing the display name when present).
+    """
+    if not isinstance(payload, dict):
+        return []
+    hits_obj = payload.get("hits") or {}
+    rows = hits_obj.get("hits") or []
+    out: List[FullTextHit] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        src = row.get("_source") or {}
+        _id = str(row.get("_id") or "")
+        accession = src.get("adsh") or (_id.split(":", 1)[0] if ":" in _id else _id)
+        document = _id.split(":", 1)[1] if ":" in _id else ""
+
+        names = src.get("display_names") or []
+        display_name = str(names[0]) if names else ""
+
+        # Prefer the structured ``ciks`` list; fall back to the display name.
+        ciks = src.get("ciks") or []
+        cik = str(ciks[0]) if ciks else ""
+        if not cik and display_name:
+            m = _CIK_RE.search(display_name)
+            if m:
+                cik = m.group(1)
+
+        root_forms = src.get("root_forms") or []
+        form = str(src.get("form") or (root_forms[0] if root_forms else ""))
+        file_date = str(src.get("file_date") or "")
+
+        out.append(
+            FullTextHit(
+                accession=str(accession),
+                form=form,
+                file_date=file_date,
+                display_name=display_name,
+                cik=cik,
+                document=document,
+            )
+        )
+        if limit and limit > 0 and len(out) >= limit:
+            break
+    return out
+
+
+def _fulltext_total(payload: Any) -> tuple:
+    """Return (total:int, is_estimate:bool) from an efts payload."""
+    if not isinstance(payload, dict):
+        return (0, False)
+    total = ((payload.get("hits") or {}).get("total")) or {}
+    if isinstance(total, dict):
+        val = total.get("value")
+        rel = total.get("relation")
+        try:
+            return (int(val), rel == "gte")
+        except (TypeError, ValueError):
+            return (0, False)
+    try:
+        return (int(total), False)
+    except (TypeError, ValueError):
+        return (0, False)
+
+
+# --------------------------------------------------------------------------- #
 # Engine — the public query surface.
 # --------------------------------------------------------------------------- #
 class Edgar:
@@ -365,6 +521,22 @@ class Edgar:
 
     def events(self, identifier: str, limit: int = 20) -> Result:
         return self._query(identifier, "events", EVENT_FORMS, limit)
+
+    def fulltext(self, query: str, limit: int = 20, forms: str = "") -> FullTextResult:
+        query = (query or "").strip()
+        if not query:
+            raise EdgarError("empty full-text query")
+        payload = self.fetcher.fulltext(query, forms=forms)
+        hits = parse_fulltext_hits(payload, limit=limit)
+        total, est = _fulltext_total(payload)
+        return FullTextResult(
+            query=query,
+            forms=forms,
+            hits=hits,
+            total=total,
+            total_is_estimate=est,
+            source=self.fetcher.mode,
+        )
 
 
 # --------------------------------------------------------------------------- #

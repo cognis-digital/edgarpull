@@ -111,5 +111,38 @@
         }
       }
     }
+  },
+  "fulltext": {
+    "*": {
+      "took": 12,
+      "timed_out": false,
+      "hits": {
+        "total": {"value": 2, "relation": "eq"},
+        "hits": [
+          {
+            "_index": "edgar_file",
+            "_id": "0000320193-26-000045:aapl-20260329.htm",
+            "_source": {
+              "ciks": ["0000320193"],
+              "display_names": ["Apple Inc. (AAPL) (CIK 0000320193)"],
+              "root_forms": ["10-Q"],
+              "form": "10-Q",
+              "file_date": "2026-05-02",
+              "adsh": "0000320193-26-000045"
+            }
+          },
+          {
+            "_index": "edgar_file",
+            "_id": "0001067983-26-000018:brk-20260430.htm",
+            "_source": {
+              "display_names": ["Berkshire Hathaway Inc  (BRK-B)  (CIK 0001067983)"],
+              "root_forms": ["8-K"],
+              "form": "8-K",
+              "file_date": "2026-04-30"
+            }
+          }
+        ]
+      }
+    }
   }
 }
