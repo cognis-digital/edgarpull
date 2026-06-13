@@ -150,6 +150,12 @@ Missing a credit? Open a PR.
 Every tool ships an MCP server, so [Cognis.Studio](https://cognis.studio) agents
 can call them as scoped capabilities.
 
+## Interoperability
+
+`{}` composes with the 300+ tool Cognis suite — JSON in/out and a shared
+OpenAI-compatible `/v1` backbone. See **[INTEROP.md](INTEROP.md)** for the
+suite map, composition patterns, and reference stacks.
+
 ## License
 
 Source-available under the **Cognis Open Collaboration License (COCL) v1.0** —
