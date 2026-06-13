@@ -19,6 +19,29 @@ pip dependencies. The SEC requires a descriptive `User-Agent` and asks clients
 to stay under ~10 req/s; edgarpull sends a proper UA and sleeps between live
 requests.
 
+## Usage — step by step
+
+1. **Install** from source (Python 3.9+; live SEC EDGAR APIs, no key required):
+   ```bash
+   pip install .
+   ```
+2. **Pull** recent filings for a ticker or CIK:
+   ```bash
+   edgarpull filings AAPL --limit 20
+   ```
+3. **Drill into** insider (Form 4), institutional (13F), or material-event (8-K) filings:
+   ```bash
+   edgarpull insiders AAPL --format json
+   edgarpull institutions NVDA --format json
+   edgarpull events TSLA
+   ```
+4. **Use the output**: pass `--format json --out filings.json` for machine-readable results; `--demo` runs fully offline against bundled samples.
+5. **Automate in CI** with a polite rate limit and your own User-Agent:
+   ```bash
+   edgarpull filings 0000320193 --format json --user-agent "you@example.com" --sleep 0.2 --out aapl.json
+   ```
+   Also: `edgarpull ft "<query>" --forms 8-K` (full-text search) and `edgarpull mcp`.
+
 ## Why
 
 Analysts and quants need fast, scriptable access to who is buying, who is
