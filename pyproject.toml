@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cognis-edgarpull"
-version = "0.1.0"
+version = "0.1.1"
 description = "SEC EDGAR intelligence — 13F institutional holdings, Form 4 insider trades, 8-K material events by ticker/CIK"
 authors = [{name = "Cognis Digital", email = "suite@cognis.digital"}]
 license = {text = "LicenseRef-COCL-1.0"}
@@ -22,6 +22,7 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
+connect = ["cognis-connect @ git+https://github.com/cognis-digital/cognis-connect.git"]
 dev = ["pytest>=8.0"]
 
 [project.urls]
@@ -29,6 +30,7 @@ Homepage = "https://cognis.digital"
 Repository = "https://github.com/cognis-digital/edgarpull"
 
 [project.scripts]
+"edgarpull-emit" = "edgarpull.connect:emit_main"
 edgarpull = "edgarpull.cli:main"
 
 [tool.hatch.build.targets.wheel]
