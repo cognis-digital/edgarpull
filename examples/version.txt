@@ -1,0 +1,3 @@
+$ edgarpull-emit --version
+
+edgarpull 0.1.0

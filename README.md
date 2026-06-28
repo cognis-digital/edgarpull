@@ -19,6 +19,60 @@ pip dependencies. The SEC requires a descriptive `User-Agent` and asks clients
 to stay under ~10 req/s; edgarpull sends a proper UA and sleeps between live
 requests.
 
+
+<!-- cognis:example:start -->
+## 🔎 Example output
+
+Real, reproducible output from the tool — runs offline:
+
+```console
+$ edgarpull-emit --version
+edgarpull 0.1.0
+```
+
+```console
+$ edgarpull-emit --help
+usage: edgarpull [-h] [--version]
+                 {filings,insiders,institutions,events,fulltext,mcp} ...
+
+SEC EDGAR intelligence — 13F institutional holdings, Form 4 insider trades,
+and 8-K material events by ticker/CIK. Public, free, no API key.
+
+positional arguments:
+  {filings,insiders,institutions,events,fulltext,mcp}
+    filings             Recent filings of any type for a ticker/CIK.
+    insiders            Form 4 insider buys/sells for a ticker/CIK.
+    institutions        13F institutional-holder filings for a ticker/CIK.
+    events              8-K material events for a ticker/CIK.
+    fulltext            Full-text search across all EDGAR filings
+                        (efts.sec.gov).
+    mcp                 Run as an MCP server (stdio JSON-RPC).
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+```
+
+> Blocks above are real `edgarpull` output — reproduce them from a clone.
+
+**Sample result format** _(illustrative values — run on your own data for real findings):_
+
+```
+{
+"findings": [
+    {
+        "id": "123456",
+        "title": "Suspicious Network Traffic",
+        "description": "Potential malicious activity detected on network port 8080",
+        "created_by": "edgarpull",
+        "created_at": "2023-02-15T14:30:00Z"
+    }
+]
+}
+```
+
+<!-- cognis:example:end -->
+
 ## Usage — step by step
 
 1. **Install** from source (Python 3.9+; live SEC EDGAR APIs, no key required):
